@@ -9,6 +9,7 @@
 from __future__ import print_function
 from ghidra.framework.model import DomainFile
 from ghidra.program.model.symbol import SourceType
+
 from ghidra.util import Msg
 
 from java.lang import IllegalArgumentException
@@ -429,7 +430,7 @@ def parse_header(f):
 		if version >= 8:
 			pattern_size = read_u16le(f)
 
-			if version >= 9:
+			if version > 9:
 				read_u16le(f) #unknow
 
 	library_name = f.read(library_name_len)
@@ -695,20 +696,19 @@ rename_cnt = 0
 def funk_rename(addr, funk):
 	global rename_cnt
 	name = funk.name
+
 	if name != '?':
-		funk = getFunctionAt(parseAddress(hex(addr)))
+		funk = getFunctionAt(addr)
 		funk.setName(name, SourceType.USER_DEFINED)
 		rename_cnt += 1
 	return
 
 def apply_sig(flirt):
 	funk = getFirstFunction()
-	#print(funk.entryPoint
-	#print(get_function_end(funk))
 	while funk is not None:
-		funk_start = int(funk.entryPoint.toString(), 16)
+		funk_start = funk.getEntryPoint()
 		funk_end   = get_function_end(funk)
-		funk_buf   = getBytes(parseAddress(hex(funk_start)), funk_end - funk_start + 0x100)
+		funk_buf   = getBytes(funk_start,funk_end - funk_start.getOffset() + 0x100)
 		#print('%x - %x' % (funk_start, funk_end))
 		match_function(flirt, funk_buf, funk_start, funk_rename)
 		funk = getFunctionAfter(funk)
